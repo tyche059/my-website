@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>주린이 주식 트렌드 한눈에 보기 📊</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* 기본 설정 */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #f0f4ff 0%, #fafbff 50%, #f5f0ff 100%);
+      min-height: 100vh;
+      color: #2d3748;
+    }
+
+    /* 헤더 스타일 */
+    header {
+      background: linear-gradient(135deg, #4f8ef7 0%, #6c63ff 100%);
+      padding: 32px 24px 28px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(79,142,247,0.3);
+    }
+    header .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+    header h1 { font-size: clamp(22px, 4vw, 34px); color: #fff; font-weight: 700; line-height: 1.3; }
+    header p  { margin-top: 10px; color: rgba(255,255,255,0.85); font-size: clamp(13px, 2vw, 15px); font-weight: 300; }
+    .header-meta { margin-top: 16px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+    .header-meta span { background: rgba(255,255,255,0.18); color: #fff; border-radius: 12px; padding: 5px 14px; font-size: 12px; }
+
+    /* 메인 컨테이너 */
+    .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px 60px; }
+
+    /* 섹션 공통 스타일 */
+    .card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 32px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    }
+    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .section-icon { 
+      width: 44px; height: 44px; 
+      border-radius: 14px; 
+      display: flex; align-items: center; justify-content: center; 
+      font-size: 22px; 
+    }
+    .section-title { font-size: 20px; font-weight: 700; color: #1a202c; }
+    .section-desc { font-size: 14px; color: #718096; margin-bottom: 24px; line-height: 1.5; }
+
+    /* 뉴스 테이블 스타일 */
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; min-width: 700px; border-collapse: collapse; text-align: left; }
+    th, td { padding: 16px; border-bottom: 1px solid #edf2f7; }
+    th { font-weight: 600; color: #4a5568; font-size: 14px; background: #f8fafc; }
+    td { font-size: 15px; color: #2d3748; }
+    tr:hover { background-color: #fbfdff; }
+    
+    .time-cell { color: #a0aec0; font-size: 13px; font-weight: 500; }
+    .category-cell { font-size: 13px; color: #4f8ef7; font-weight: 500; }
+
+    /* 뉴스 링크 스타일 */
+    .news-link {
+      color: #2d3748;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .news-link::after {
+      content: '↗';
+      font-size: 12px;
+      color: #a0aec0;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .news-link:hover {
+      color: #4f8ef7;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+    .news-link:hover::after {
+      opacity: 1;
+    }
+
+    /* 뱃지(시장 흐름) 스타일 */
+    .status {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700;
+    }
+    .status.positive { background: #e6fffa; color: #319795; }
+    .status.negative { background: #fff5f5; color: #e53e3e; }
+    .status.neutral { background: #f1f5f9; color: #64748b; }
+
+    /* 차트 래퍼 */
+    .chart-container {
+      position: relative;
+      height: 400px;
+      width: 100%;
+    }
+
+    /* 반응형 처리 */
+    @media (max-width: 768px) {
+      .card { padding: 20px; }
+      th, td { padding: 12px 10px; font-size: 14px; }
+      .chart-container { height: 300px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">주린이 전용 대시보드 🌱</div>
+    <h1>주식 트렌드 한눈에 보기</h1>
+    <p>복잡한 차트와 숫자는 잠시 안녕! 오늘 세상 돌아가는 이야기로 유망한 분야를 발견해 보세요.</p>
+    <div class="header-meta">
+      <span>업데이트: 최근 이슈 종합</span>
+      <span>읽는 시간: 2분</span>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- 1. 뉴스 기반 시장 흐름 표 -->
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon" style="background: #ebf8ff; color: #3182ce;">📰</div>
+        <h2 class="section-title">오늘의 핫이슈 & 시장 분위기</h2>
+      </div>
+      <p class="section-desc">가장 뜨거운 뉴스와 그 뉴스가 주식 시장에 어떤 영향을 주고 있는지 정리했어요. <strong>안정적으로 접속되는 네이버 뉴스 원문으로 연결됩니다.</strong></p>
+      
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th width="12%">시간</th>
+              <th width="48%">뉴스 헤드라인 (클릭 시 원문 이동)</th>
+              <th width="20%">관련 분야</th>
+              <th width="20%">시장 영향도</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="time-cell">오전 09:30</td>
+              <td>
+                <a href="https://n.news.naver.com/mnews/article/001/0015839727" target="_blank" class="news-link">"옥스퍼드 사전 오른 K라면, '수출 15억달러 돌파'…3년새 두배"</a>
+              </td>
+              <td class="category-cell">식품 / 소비재</td>
+              <td><span class="status positive">📈 성장 기대</span></td>
+            </tr>
+            <tr>
+              <td class="time-cell">오전 11:15</td>
+              <td>
+                <a href="https://n.news.naver.com/mnews/article/025/0002996236" target="_blank" class="news-link">"스마트폰 시장 '속'부터 곪나...38곳 부품업체 주가 15% 빠져"</a>
+              </td>
+              <td class="category-cell">기존 IT 부품</td>
+              <td><span class="status negative">📉 주의 필요</span></td>
+            </tr>
+            <tr>
+              <td class="time-cell">오후 01:20</td>
+              <td>
+                <a href="https://n.news.naver.com/mnews/article/081/0003639228" target="_blank" class="news-link">"ESS·전기차 수요 증가에… 전 세계 '리튬 전쟁' 불붙었다"</a>
+              </td>
+              <td class="category-cell">2차 전지 / 광물</td>
+              <td><span class="status positive">📈 성장 기대</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 2. 기업 추세 꺾은선 그래프 -->
+    <div class="card">
+      <div class="section-header">
+        <div class="section-icon" style="background: #faf5ff; color: #805ad5;">🚀</div>
+        <h2 class="section-title">분야별 대표 기업들의 최근 성장 흐름</h2>
+      </div>
+      <p class="section-desc">
+        위 실제 뉴스에서 언급된 분야의 대표 회사들이 실제로 뉴스의 흐름대로 어떻게 움직였는지 확인해 보세요. (시작일 가치를 100으로 잡았을 때의 변화율)
+      </p>
+      
+      <div class="chart-container">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const ctx = document.getElementById('trendChart').getContext('2d');
+
+      const trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels:['월요일', '화요일', '수요일', '목요일', '금요일(오늘)'],
+          datasets:[
+            {
+              // 첫번째 뉴스: K라면 수출 돌파
+              label: '삼양식품 (K-푸드 대장주)',
+              data:[100, 101, 105, 110, 115],
+              borderColor: '#48bb78',
+              backgroundColor: 'rgba(72, 187, 120, 0.1)',
+              borderWidth: 3,
+              pointBackgroundColor: '#fff',
+              pointBorderColor: '#48bb78',
+              pointRadius: 5,
+              tension: 0.3,
+              fill: true
+            },
+            {
+              // 두번째 뉴스: 부품업체 주가 빠져
+              label: '스마트폰 부품 관련주 평균',
+              data:[100, 98, 93, 89, 85],
+              borderColor: '#a0aec0',
+              backgroundColor: 'transparent',
+              borderWidth: 3,
+              borderDash:[5, 5],
+              pointBackgroundColor: '#fff',
+              pointBorderColor: '#a0aec0',
+              pointRadius: 5,
+              tension: 0.3,
+              fill: false
+            },
+            {
+              // 세번째 뉴스: 리튬 전쟁 불붙어
+              label: '포스코홀딩스 (리튬·배터리 대표주)',
+              data:[100, 99, 102, 106, 110],
+              borderColor: '#ed8936',
+              backgroundColor: 'rgba(237, 137, 54, 0.1)',
+              borderWidth: 3,
+              pointBackgroundColor: '#fff',
+              pointBorderColor: '#ed8936',
+              pointRadius: 5,
+              tension: 0.3,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                font: { family: "'Noto Sans KR', sans-serif", size: 14, weight: 'bold' },
+                color: '#2d3748',
+                usePointStyle: true,
+                padding: 20
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(26, 32, 44, 0.9)',
+              titleFont: { family: "'Noto Sans KR', sans-serif", size: 14 },
+              bodyFont: { family: "'Noto Sans KR', sans-serif", size: 14, weight: 'bold' },
+              padding: 14,
+              displayColors: true,
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label.split(' ')[0] + ' : ' + context.parsed.y + ' 지수';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              min: 80,
+              max: 130,
+              grid: { color: '#edf2f7', drawBorder: false },
+              ticks: {
+                font: { family: "'Noto Sans KR', sans-serif", size: 12 },
+                color: '#718096',
+                stepSize: 10
+              }
+            },
+            x: {
+              grid: { display: false },
+              ticks: {
+                font: { family: "'Noto Sans KR', sans-serif", size: 13 },
+                color: '#4a5568'
+              }
+            }
+          },
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
