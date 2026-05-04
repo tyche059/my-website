@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>주린이 주식 트렌드 한눈에 보기 📊</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;800&display=swap" rel="stylesheet"/>
   <style>
     /* 기본 설정 */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,7 +38,7 @@
     header h1 { font-size: clamp(22px, 4vw, 34px); color: #fff; font-weight: 700; line-height: 1.3; }
     header p  { margin-top: 10px; color: rgba(255,255,255,0.85); font-size: clamp(13px, 2vw, 15px); font-weight: 300; }
     .header-meta { margin-top: 16px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
-    .header-meta span { background: rgba(255,255,255,0.18); color: #fff; border-radius: 12px; padding: 5px 14px; font-size: 12px; }
+    .header-meta span { background: rgba(255,255,255,0.18); color: #fff; border-radius: 12px; padding: 5px 14px; font-size: 12px; font-weight: 500; }
 
     /* 메인 컨테이너 */
     .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px 60px; }
@@ -51,7 +51,7 @@
       margin-bottom: 32px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
     }
-    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
     .section-icon { 
       width: 44px; height: 44px; 
       border-radius: 14px; 
@@ -59,7 +59,7 @@
       font-size: 22px; 
     }
     .section-title { font-size: 20px; font-weight: 700; color: #1a202c; }
-    .section-desc { font-size: 14px; color: #718096; margin-bottom: 24px; line-height: 1.5; }
+    .section-desc { font-size: 14px; color: #718096; margin-bottom: 24px; line-height: 1.5; background: #f8fafc; padding: 12px 16px; border-radius: 12px; }
 
     /* 뉴스 테이블 스타일 */
     .table-wrapper { overflow-x: auto; }
@@ -69,56 +69,58 @@
     td { font-size: 15px; color: #2d3748; }
     tr:hover { background-color: #fbfdff; }
     
-    .time-cell { color: #a0aec0; font-size: 13px; font-weight: 500; }
+    .time-cell { color: #4a5568; font-size: 14px; font-weight: 500; line-height: 1.4; }
+    .time-cell .time-sm { font-size: 12px; color: #a0aec0; }
     .category-cell { font-size: 13px; color: #4f8ef7; font-weight: 500; }
 
     /* 뉴스 링크 스타일 */
-    .news-link {
-      color: #2d3748;
-      text-decoration: none;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .news-link::after {
-      content: '↗';
-      font-size: 12px;
-      color: #a0aec0;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-    .news-link:hover {
-      color: #4f8ef7;
-      text-decoration: underline;
-      text-underline-offset: 4px;
-    }
-    .news-link:hover::after {
-      opacity: 1;
-    }
+    .news-link { color: #2d3748; text-decoration: none; font-weight: 500; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; }
+    .news-link::after { content: '↗'; font-size: 12px; color: #a0aec0; opacity: 0; transition: opacity 0.2s ease; }
+    .news-link:hover { color: #4f8ef7; text-decoration: underline; text-underline-offset: 4px; }
+    .news-link:hover::after { opacity: 1; }
 
     /* 뱃지(시장 흐름) 스타일 */
-    .status {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700;
+    .status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+    .status.positive { background: #fff5f5; color: #e53e3e; } /* 한국은 상승이 빨간색 */
+    .status.negative { background: #ebf8ff; color: #3182ce; } /* 한국은 하락이 파란색 */
+
+    /* ✨ 주린이 맞춤형 요약 카드 스타일 ✨ */
+    .chart-insights {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
     }
-    .status.positive { background: #e6fffa; color: #319795; }
-    .status.negative { background: #fff5f5; color: #e53e3e; }
-    .status.neutral { background: #f1f5f9; color: #64748b; }
+    .insight-box {
+      padding: 18px;
+      border-radius: 16px;
+      border-left: 5px solid #cbd5e1;
+      background: #ffffff;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .insight-box.up { background: #fffcfc; border-left-color: #fc8181; } /* 빨간색 톤 */
+    .insight-box.down { background: #fbfdff; border-left-color: #63b3ed; } /* 파란색 톤 */
+    
+    .insight-header { display: flex; justify-content: space-between; align-items: center; }
+    .insight-title { font-weight: 700; color: #2d3748; font-size: 15px; }
+    .insight-score { font-size: 18px; font-weight: 800; }
+    .insight-box.up .insight-score { color: #e53e3e; }
+    .insight-box.down .insight-score { color: #3182ce; }
+    
+    .insight-text { font-size: 13.5px; color: #4a5568; line-height: 1.5; margin-top: 4px; }
+    .insight-text strong { color: #2d3748; }
 
     /* 차트 래퍼 */
-    .chart-container {
-      position: relative;
-      height: 400px;
-      width: 100%;
-    }
+    .chart-container { position: relative; height: 350px; width: 100%; }
 
     /* 반응형 처리 */
     @media (max-width: 768px) {
       .card { padding: 20px; }
       th, td { padding: 12px 10px; font-size: 14px; }
-      .chart-container { height: 300px; }
+      .chart-container { height: 280px; }
     }
   </style>
 </head>
@@ -129,7 +131,7 @@
     <h1>주식 트렌드 한눈에 보기</h1>
     <p>복잡한 차트와 숫자는 잠시 안녕! 오늘 세상 돌아가는 이야기로 유망한 분야를 발견해 보세요.</p>
     <div class="header-meta">
-      <span>업데이트: 최근 이슈 종합</span>
+      <span id="current-update-time">업데이트: 시간 불러오는 중...</span>
       <span>읽는 시간: 2분</span>
     </div>
   </header>
@@ -140,44 +142,41 @@
     <div class="card">
       <div class="section-header">
         <div class="section-icon" style="background: #ebf8ff; color: #3182ce;">📰</div>
-        <h2 class="section-title">오늘의 핫이슈 & 시장 분위기</h2>
+        <h2 class="section-title">주요 핫이슈 & 시장 분위기</h2>
       </div>
-      <p class="section-desc">가장 뜨거운 뉴스와 그 뉴스가 주식 시장에 어떤 영향을 주고 있는지 정리했어요. <strong>안정적으로 접속되는 네이버 뉴스 원문으로 연결됩니다.</strong></p>
+      <p class="section-desc">
+        최근 시장을 움직인 핵심 뉴스와 주식 시장에 미친 영향을 정리했어요.<br>
+        <strong>💡 꿀팁: 제목을 클릭하면 진짜 뉴스 기사를 읽어볼 수 있어요!</strong>
+      </p>
       
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
-              <th width="12%">시간</th>
-              <th width="48%">뉴스 헤드라인 (클릭 시 원문 이동)</th>
+              <th width="15%">보도 일시</th>
+              <th width="45%">뉴스 헤드라인 (클릭 시 원문 이동)</th>
               <th width="20%">관련 분야</th>
               <th width="20%">시장 영향도</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td class="time-cell">오전 09:30</td>
-              <td>
-                <a href="https://n.news.naver.com/mnews/article/001/0015839727" target="_blank" class="news-link">"옥스퍼드 사전 오른 K라면, '수출 15억달러 돌파'…3년새 두배"</a>
-              </td>
+              <td class="time-cell">2026.01.11<br><span class="time-sm">오전 06:11</span></td>
+              <td><a href="https://n.news.naver.com/mnews/article/001/0015839727" target="_blank" class="news-link">"옥스퍼드 사전 오른 K라면, '수출 15억달러 돌파'…3년새 두배"</a></td>
               <td class="category-cell">식품 / 소비재</td>
-              <td><span class="status positive">📈 성장 기대</span></td>
+              <td><span class="status positive">📈 긍정적 (상승)</span></td>
             </tr>
             <tr>
-              <td class="time-cell">오전 11:15</td>
-              <td>
-                <a href="https://n.news.naver.com/mnews/article/025/0002996236" target="_blank" class="news-link">"스마트폰 시장 '속'부터 곪나...38곳 부품업체 주가 15% 빠져"</a>
-              </td>
-              <td class="category-cell">기존 IT 부품</td>
-              <td><span class="status negative">📉 주의 필요</span></td>
-            </tr>
-            <tr>
-              <td class="time-cell">오후 01:20</td>
-              <td>
-                <a href="https://n.news.naver.com/mnews/article/081/0003639228" target="_blank" class="news-link">"ESS·전기차 수요 증가에… 전 세계 '리튬 전쟁' 불붙었다"</a>
-              </td>
+              <td class="time-cell">2026.04.28<br><span class="time-sm">오전 05:04</span></td>
+              <td><a href="https://n.news.naver.com/mnews/article/081/0003639228" target="_blank" class="news-link">"ESS·전기차 수요 증가에… 전 세계 '리튬 전쟁' 불붙었다"</a></td>
               <td class="category-cell">2차 전지 / 광물</td>
-              <td><span class="status positive">📈 성장 기대</span></td>
+              <td><span class="status positive">📈 긍정적 (상승)</span></td>
+            </tr>
+            <tr>
+              <td class="time-cell">2020.04.26<br><span class="time-sm">오전 12:02</span></td>
+              <td><a href="https://n.news.naver.com/mnews/article/025/0002996236" target="_blank" class="news-link">"스마트폰 시장 '속'부터 곪나...38곳 부품업체 주가 15% 빠져"</a></td>
+              <td class="category-cell">기존 IT 부품</td>
+              <td><span class="status negative">📉 주의 (하락)</span></td>
             </tr>
           </tbody>
         </table>
@@ -187,13 +186,41 @@
     <!-- 2. 기업 추세 꺾은선 그래프 -->
     <div class="card">
       <div class="section-header">
-        <div class="section-icon" style="background: #faf5ff; color: #805ad5;">🚀</div>
-        <h2 class="section-title">분야별 대표 기업들의 최근 성장 흐름</h2>
+        <div class="section-icon" style="background: #fff5f5; color: #e53e3e;">📈</div>
+        <h2 class="section-title">그래프 요약: 이번 주, 누가 누가 잘했나?</h2>
       </div>
       <p class="section-desc">
-        위 실제 뉴스에서 언급된 분야의 대표 회사들이 실제로 뉴스의 흐름대로 어떻게 움직였는지 확인해 보세요. (시작일 가치를 100으로 잡았을 때의 변화율)
+        어려운 주식 가격 대신, <strong>월요일 출발선을 100점</strong>으로 두고 금요일까지 점수가 얼마나 변했는지 그렸어요. 선이 위로 올라갈수록 위의 뉴스 덕분에 좋은 영향을 받은 거예요!
       </p>
-      
+
+      <!-- ✨ 새로 추가된 주린이 맞춤형 핵심 요약 카드 ✨ -->
+      <div class="chart-insights">
+        <div class="insight-box up">
+          <div class="insight-header">
+            <div class="insight-title">🍜 삼양식품 (K-푸드)</div>
+            <div class="insight-score">+15점</div>
+          </div>
+          <div class="insight-text">"수출 대박 뉴스에 힘입어 일주일 내내 <strong>쉬지 않고 꾸준히 점수가 올랐어요!</strong>"</div>
+        </div>
+
+        <div class="insight-box up">
+          <div class="insight-header">
+            <div class="insight-title">🔋 포스코홀딩스 (리튬)</div>
+            <div class="insight-score">+10점</div>
+          </div>
+          <div class="insight-text">"리튬 수요가 폭발한다는 소식과 함께 <strong>후반부에 치고 올라왔어요.</strong>"</div>
+        </div>
+
+        <div class="insight-box down">
+          <div class="insight-header">
+            <div class="insight-title">📱 스마트폰 부품주</div>
+            <div class="insight-score">-15점</div>
+          </div>
+          <div class="insight-text">"스마트폰이 안 팔린다는 걱정스러운 뉴스 때문에 <strong>점수가 계속 내려갔어요.</strong>"</div>
+        </div>
+      </div>
+
+      <!-- 그래프 영역 -->
       <div class="chart-container">
         <canvas id="trendChart"></canvas>
       </div>
@@ -202,7 +229,26 @@
   </div>
 
   <script>
+    function updateCurrentTime() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const date = String(now.getDate()).padStart(2, '0');
+      
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? '오후' : '오전';
+      
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+
+      const timeString = `업데이트: ${year}.${month}.${date} ${ampm} ${hours}:${minutes}`;
+      document.getElementById('current-update-time').innerText = timeString;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+      updateCurrentTime();
+
       const ctx = document.getElementById('trendChart').getContext('2d');
 
       const trendChart = new Chart(ctx, {
@@ -211,44 +257,44 @@
           labels:['월요일', '화요일', '수요일', '목요일', '금요일(오늘)'],
           datasets:[
             {
-              // 첫번째 뉴스: K라면 수출 돌파
-              label: '삼양식품 (K-푸드 대장주)',
+              // 한국 주식 시장 상승색 (빨간색)
+              label: '삼양식품 (K-푸드)',
               data:[100, 101, 105, 110, 115],
-              borderColor: '#48bb78',
-              backgroundColor: 'rgba(72, 187, 120, 0.1)',
-              borderWidth: 3,
+              borderColor: '#f56565',
+              backgroundColor: 'rgba(245, 101, 101, 0.1)',
+              borderWidth: 4,
               pointBackgroundColor: '#fff',
-              pointBorderColor: '#48bb78',
-              pointRadius: 5,
+              pointBorderColor: '#f56565',
+              pointRadius: 6,
               tension: 0.3,
               fill: true
             },
             {
-              // 두번째 뉴스: 부품업체 주가 빠져
-              label: '스마트폰 부품 관련주 평균',
-              data:[100, 98, 93, 89, 85],
-              borderColor: '#a0aec0',
-              backgroundColor: 'transparent',
-              borderWidth: 3,
-              borderDash:[5, 5],
-              pointBackgroundColor: '#fff',
-              pointBorderColor: '#a0aec0',
-              pointRadius: 5,
-              tension: 0.3,
-              fill: false
-            },
-            {
-              // 세번째 뉴스: 리튬 전쟁 불붙어
-              label: '포스코홀딩스 (리튬·배터리 대표주)',
+              // 상승이지만 다른 종목 구분을 위한 주황색
+              label: '포스코홀딩스 (리튬·배터리)',
               data:[100, 99, 102, 106, 110],
               borderColor: '#ed8936',
               backgroundColor: 'rgba(237, 137, 54, 0.1)',
-              borderWidth: 3,
+              borderWidth: 4,
               pointBackgroundColor: '#fff',
               pointBorderColor: '#ed8936',
-              pointRadius: 5,
+              pointRadius: 6,
               tension: 0.3,
               fill: true
+            },
+            {
+              // 한국 주식 시장 하락색 (파란색)
+              label: '스마트폰 부품 관련주 평균',
+              data:[100, 98, 93, 89, 85],
+              borderColor: '#4299e1',
+              backgroundColor: 'transparent',
+              borderWidth: 3,
+              borderDash:[6, 6],
+              pointBackgroundColor: '#fff',
+              pointBorderColor: '#4299e1',
+              pointRadius: 5,
+              tension: 0.3,
+              fill: false
             }
           ]
         },
@@ -273,7 +319,7 @@
               displayColors: true,
               callbacks: {
                 label: function(context) {
-                  return context.dataset.label.split(' ')[0] + ' : ' + context.parsed.y + ' 지수';
+                  return context.dataset.label.split(' ')[0] + ' : ' + context.parsed.y + '점';
                 }
               }
             }
@@ -284,9 +330,12 @@
               max: 130,
               grid: { color: '#edf2f7', drawBorder: false },
               ticks: {
-                font: { family: "'Noto Sans KR', sans-serif", size: 12 },
+                font: { family: "'Noto Sans KR', sans-serif", size: 13 },
                 color: '#718096',
-                stepSize: 10
+                stepSize: 10,
+                callback: function(value) {
+                  return value + '점'; // Y축에 '점' 글자 추가
+                }
               }
             },
             x: {
